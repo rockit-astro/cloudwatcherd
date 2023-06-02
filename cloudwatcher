@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+#
+# This file is part of cloudwatcherd
+#
+# cloudwatcherd is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cloudwatcherd is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cloudwatcherd.  If not, see <http://www.gnu.org/licenses/>.
+
+"""Commandline client for querying the latest measurement from cloudwatcherd"""
+
+import datetime
+import glob
+import json
+import os
+import sys
+import Pyro4
+from warwick.observatory.common import TFmt
+from warwick.observatory.cloudwatcher import Config
+
+SCRIPT_NAME = os.path.basename(sys.argv[0])
+sys.excepthook = Pyro4.util.excepthook
+
+
+def run_command(config_paths, station_id, command):
+    """Prints the message associated with a status code and returns the code"""
+    config = Config(config_paths[station_id])
+    try:
+        ret = command(config)
+    except Pyro4.errors.CommunicationError:
+        print('error: unable to communicate with the CloudWatcher daemon')
+        ret = 1
+
+    return ret
+
+
+def print_status(config):
+    """Prints the latest weather data in human-readable form"""
+    with config.daemon.connect() as cloudwatcher:
+        latest = cloudwatcher.last_measurement()
+
+    if latest is not None:
+        date = datetime.datetime.strptime(latest['date'], '%Y-%m-%dT%H:%M:%SZ')
+        print(f'Data received {TFmt.Bold}{date}{TFmt.Clear}:')
+        print(f'Sky Temperature: {TFmt.Bold}{latest["sky_temp"]:.2f} \u00B0C{TFmt.Clear} ({TFmt.Bold}{latest["sky_label"]}{TFmt.Clear})')
+        print(f'Sky Brightness: {TFmt.Bold}{latest["brightness_raw"]:.2f} k\u2126{TFmt.Clear} ({TFmt.Bold}{latest["brightness_label"]}{TFmt.Clear})')
+        print()
+    else:
+        print('error: failed to query data')
+        return 1
+
+    return 0
+
+
+def print_json(config):
+    """Prints the latest environment data in machine-readable form"""
+    with config.daemon.connect() as cloudwatcher:
+        latest = cloudwatcher.last_measurement()
+    print(json.dumps(latest or {}))
+    return 0
+
+
+def print_usage(config_paths):
+    """Prints the utility help"""
+    print(f'Usage: {SCRIPT_NAME} [{"|".join(sorted(config_paths.keys()))}] <command>')
+    print()
+    print('   status      print a human-readable summary of the CloudWatcher status')
+    print('   json        print a machine-readable summary of the CloudWatcher status')
+    print()
+
+    return 1
+
+
+if __name__ == '__main__':
+    if 'CLOUDWATCHERD_CONFIG_ROOT' in os.environ:
+        config_root = os.environ['CLOUDWATCHERD_CONFIG_ROOT']
+    else:
+        config_root = '/etc/cloudwatcherd'
+
+    configs = {os.path.basename(p)[:-5]: p for p in glob.glob(os.path.join(config_root, '*.json'))}
+    if not configs:
+        print('error: no configs were found in ' + config_root)
+        print('       run as CLOUDWATCHERD_CONFIG_ROOT=/path/to/config/root ' + ' '.join(sys.argv))
+        print('       to specify the configuration root directory')
+        sys.exit(1)
+
+    if len(sys.argv) == 2 and sys.argv[1] == 'list-stations':
+        print(' '.join(sorted(configs.keys())))
+        sys.exit(0)
+
+    if len(sys.argv) < 3:
+        sys.exit(print_usage(configs))
+
+    commands = {
+        'status': print_status,
+        'json': print_json
+    }
+
+    if sys.argv[1] not in configs or sys.argv[2] not in commands:
+        sys.exit(print_usage(configs))
+
+    sys.exit(run_command(configs, sys.argv[1], commands[sys.argv[2]]))

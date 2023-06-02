@@ -1,0 +1,8 @@
+{
+  "daemon": "warwick_cloudwatcher",
+  "log_name": "cloudwatcherd@warwick",
+  "socket_ip": "172.19.0.165",
+  "socket_port": 4002,
+  "socket_timeout": 5,
+  "query_delay": 5
+}

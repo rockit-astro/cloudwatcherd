@@ -1,0 +1,172 @@
+#!/usr/bin/env python3
+#
+# This file is part of cloudwatcherd
+#
+# cloudwatcherd is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cloudwatcherd is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cloudwatcherd.  If not, see <http://www.gnu.org/licenses/>.
+
+"""Weather station daemon"""
+
+import argparse
+import datetime
+import socket
+import threading
+import time
+from astropy.stats import sigma_clipped_stats
+import numpy as np
+import Pyro4
+import serial
+from warwick.observatory.common import log
+from warwick.observatory.cloudwatcher import Config
+
+# Set automatically when generating RPM package
+SOFTWARE_VERSION = "UNKNOWN"
+
+
+def correct_sky_temperature(ambient, sky):
+    """Apply ambient temperature correction"""
+    k = [33 / 100., 0 / 10., 4 / 100., 100 / 1000., 100 / 100.]
+    sky -= k[0] * (ambient - k[1]) + k[2] * np.exp(k[3] * ambient) ** k[4]
+
+    # TODO: Implement cold weather correction (needs additional constants)
+    return sky
+
+
+def sky_temperature_label(temperature):
+    if temperature < -5:
+        return "CLEAR"
+    if temperature < 0:
+        return "CLOUDY"
+    return "OVERCAST"
+
+
+def brightness_label(ldr):
+    if ldr > 2100:
+        return "DARK"
+    if ldr > 100:
+        return "LIGHT"
+    return "BRIGHT"
+
+
+class CloudWatcherDaemon:
+    """Daemon class that wraps the RS232/ethernet interface"""
+    def __init__(self, config):
+        self._config = config
+        self._lock = threading.Lock()
+        self._latest = None
+
+        threading.Thread(target=self.run, daemon=True).start()
+
+    def run(self):
+        """Main run loop"""
+        port_error = False
+        sock = port = None
+
+        def query(send_type, response_type):
+            port.write(f'{send_type}!'.encode('ascii'))
+            ret = None
+            while True:
+                data = port.read(15).decode('ascii')
+                if data[:2] == f'!{response_type}':
+                    ret = int(data[2:15])
+                elif data[:2] == '!\x11':
+                    break
+            return ret
+
+        while True:
+            # Initial setup
+            try:
+                if self._config.socket_ip:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.connect((self._config.socket_ip, self._config.socket_port))
+                    sock.settimeout(self._config.socket_timeout)
+                    port = sock.makefile(mode='rwb', buffering=0)
+                    print(f'Connected to {self._config.socket_ip}:{self._config.socket_port}')
+                else:
+                    port = serial.Serial(self._config.serial_port, self._config.serial_baud,
+                                         timeout=self._config.serial_timeout)
+                    print('Connected to', self._config.serial_port)
+
+                prefix = 'Restored' if port_error else 'Established'
+                log.info(self._config.log_name, prefix + ' connection to CloudWatcher')
+                port_error = False
+            except Exception as exception:
+                if not port_error:
+                    print(exception)
+                    print('Will retry in 10 seconds...')
+                    log.error(self._config.log_name, 'Failed to connect to CloudWatcher')
+
+                port_error = True
+
+                time.sleep(10.)
+                continue
+
+            try:
+                self._latest = None
+
+                # Main run loop
+                while True:
+                    # The CloudWatcher protocol document recommends
+                    # taking a clipped mean of 5 samples
+                    sky_raw = []
+                    ambient_raw = []
+                    ldr_raw = []
+                    for _ in range(5):
+                        sky_raw.append(query('S', '1') / 100.)
+                        ambient_raw.append(query('T', '2') / 100.)
+                        ldr_raw.append(56 / (1023. / max(query('C', '4'), 1) - 1))
+
+                    sky_raw, *_ = sigma_clipped_stats(sky_raw)
+                    ambient_raw, *_ = sigma_clipped_stats(ambient_raw)
+                    ldr_raw, *_ = sigma_clipped_stats(ldr_raw)
+                    sky_corrected = correct_sky_temperature(ambient_raw, sky_raw)
+
+                    with self._lock:
+                        self._latest = {
+                            'date': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                            'sky_raw': sky_raw,
+                            'ambient_raw': ambient_raw,
+                            'brightness_raw': ldr_raw,
+                            'sky_temp': sky_corrected,
+                            'sky_label': sky_temperature_label(sky_corrected),
+                            'brightness_label': brightness_label(ldr_raw),
+                            'software_version': SOFTWARE_VERSION
+                        }
+                    time.sleep(self._config.query_delay)
+            except Exception as exception:
+                if sock:
+                    sock.close()
+                    sock = None
+
+                port.close()
+                if not port_error:
+                    print(exception)
+                    print('Will retry in 10 seconds...')
+                    log.error(self._config.log_name, 'Lost connection to CloudWatcher')
+                port_error = True
+                time.sleep(10.)
+
+    @Pyro4.expose
+    def last_measurement(self):
+        """Query the latest valid measurement."""
+        with self._lock:
+            return self._latest
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='CloudWatcher Server')
+    parser.add_argument('config', help='Path to configuration json file')
+    args = parser.parse_args()
+
+    _config = Config(args.config)
+    _config.daemon.launch(CloudWatcherDaemon(_config))
