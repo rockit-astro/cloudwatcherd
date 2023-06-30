@@ -35,6 +35,7 @@ jobs:
           rocky-packages/set-spec-release.sh observatory-cloudwatcher-server.spec
           rocky-packages/set-spec-release.sh observatory-cloudwatcher-client.spec
           rocky-packages/set-spec-release.sh python3-warwick-observatory-cloudwatcher.spec
+          rocky-packages/set-spec-release.sh halfmetre-cloudwatcher-data.spec
 
       - name: Package RPMs
         run:

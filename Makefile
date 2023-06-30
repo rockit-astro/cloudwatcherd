@@ -14,7 +14,7 @@ all:
 	${RPMBUILD} -ba observatory-cloudwatcher-server.spec
 	${RPMBUILD} -ba observatory-cloudwatcher-client.spec
 	${RPMBUILD} -ba python3-warwick-observatory-cloudwatcher.spec
-	${RPMBUILD} -ba observatory-cloudwatcher-data.spec
+	${RPMBUILD} -ba halfmetre-cloudwatcher-data.spec
 
 	mv build/noarch/*.rpm .
 	rm -rf build

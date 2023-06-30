@@ -1,0 +1,1 @@
+SUBSYSTEM=="tty", KERNEL=="ttyS0", SYMLINK="cloudwatcher", MODE="0666"

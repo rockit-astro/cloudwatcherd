@@ -36,7 +36,7 @@ The automated packaging scripts will push 4 RPM packages to the observatory pack
 | observatory-cloudwatcher-server          | Contains the `cloudwatcherd` server and systemd service file.         |
 | observatory-cloudwatcher-client          | Contains the `cloudwatcher` commandline utility.                      |
 | python3-warwick-observatory-cloudwatcher | Contains the python module with shared code.                          |
-| observatory-cloudwatcher-data            | Contains the json configuration and udev rules for the La Palma unit. |
+| halfmetre-cloudwatcher-data              | Contains the json configuration and udev rules for the La Palma unit. |
 
 Alternatively, perform a local installation using `sudo make install`.
 

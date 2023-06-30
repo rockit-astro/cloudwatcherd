@@ -1,0 +1,8 @@
+{
+  "daemon": "halfmetre_cloudwatcher",
+  "log_name": "cloudwatcherd@halfmetre",
+  "serial_port": "/dev/cloudwatcher",
+  "serial_baud": 9600,
+  "serial_timeout": 5,
+  "query_delay": 5
+}
