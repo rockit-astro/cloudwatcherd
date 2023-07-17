@@ -124,7 +124,7 @@ class CloudWatcherDaemon:
                     for _ in range(5):
                         sky_raw.append(query('S', '1') / 100.)
                         ambient_raw.append(query('T', '2') / 100.)
-                        ldr_raw.append(56 / (1023. / max(query('C', '4'), 1) - 1))
+                        ldr_raw.append(56 / (1023. / max(min(query('C', '4'), 1022), 1) - 1))
 
                     sky_raw, *_ = sigma_clipped_stats(sky_raw)
                     ambient_raw, *_ = sigma_clipped_stats(ambient_raw)
