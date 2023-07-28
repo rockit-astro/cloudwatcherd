@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 #
-# This file is part of cloudwatcherd
+# This file is part of the Robotic Observatory Control Kit (rockit)
 #
-# cloudwatcherd is free software: you can redistribute it and/or modify
+# rockit is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# cloudwatcherd is distributed in the hope that it will be useful,
+# rockit is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with cloudwatcherd.  If not, see <http://www.gnu.org/licenses/>.
+# along with rockit.  If not, see <http://www.gnu.org/licenses/>.
 
 """Weather station daemon"""
 
@@ -26,11 +26,8 @@ from astropy.stats import sigma_clipped_stats
 import numpy as np
 import Pyro4
 import serial
-from warwick.observatory.common import log
-from warwick.observatory.cloudwatcher import Config
-
-# Set automatically when generating RPM package
-SOFTWARE_VERSION = "UNKNOWN"
+from rockit.common import log
+from rockit.cloudwatcher import Config
 
 
 def correct_sky_temperature(ambient, sky):
@@ -139,8 +136,7 @@ class CloudWatcherDaemon:
                             'brightness_raw': ldr_raw,
                             'sky_temp': sky_corrected,
                             'sky_label': sky_temperature_label(sky_corrected),
-                            'brightness_label': brightness_label(ldr_raw),
-                            'software_version': SOFTWARE_VERSION
+                            'brightness_label': brightness_label(ldr_raw)
                         }
                     time.sleep(self._config.query_delay)
             except Exception as exception:

@@ -1,13 +1,9 @@
 ## AAG Cloud Watcher daemon
 
-Part of the observatory software for the Warwick La Palma telescopes.
-
 `cloudwatcherd` wraps an AAG CloudWatcher attached via a USB-RS232 or Ethernet-RS232 adaptor and
 makes the latest measurement available for other services via Pyro.
 
 `cloudwatcher` is a commandline utility that reports the latest data from the daemon.
-
-See [Software Infrastructure](https://github.com/warwick-one-metre/docs/wiki/Software-Infrastructure) for an overview of the W1m software architecture and instructions for developing and deploying the code.
 
 ### Configuration
 
@@ -31,20 +27,19 @@ If the physical serial port or USB adaptors change these should be updated to ma
 
 The automated packaging scripts will push 4 RPM packages to the observatory package repository:
 
-| Package                                  | Description                                                           |
-|------------------------------------------|-----------------------------------------------------------------------|
-| observatory-cloudwatcher-server          | Contains the `cloudwatcherd` server and systemd service file.         |
-| observatory-cloudwatcher-client          | Contains the `cloudwatcher` commandline utility.                      |
-| python3-warwick-observatory-cloudwatcher | Contains the python module with shared code.                          |
-| halfmetre-cloudwatcher-data              | Contains the json configuration and udev rules for the La Palma unit. |
+| Package                          | Description                                                           |
+|----------------------------------|-----------------------------------------------------------------------|
+| rockit-cloudwatcher-server       | Contains the `cloudwatcherd` server and systemd service file.         |
+| rockit-cloudwatcher-client       | Contains the `cloudwatcher` commandline utility.                      |
+| python3-rockit-cloudwatcher      | Contains the python module with shared code.                          |
+| rockit-cloudwatcher-data-lapalma | Contains the json configuration and udev rules for the La Palma unit. |
 
 Alternatively, perform a local installation using `sudo make install`.
 
 After installing packages, the systemd service should be enabled:
 
 ```
-sudo systemctl enable cloudwatcherd@<config>
-sudo systemctl start cloudwatcherd@<config>
+sudo systemctl enable --now cloudwatcherd@<config>
 ```
 
 where `config` is the name of the json file for the appropriate station.
@@ -67,14 +62,13 @@ sudo yum update
 
 The daemon should then be restarted to use the newly installed code:
 ```
-sudo systemctl stop cloudwatcherd@<config>
-sudo systemctl start cloudwatcherd@<config>
+sudo systemctl restart cloudwatcherd@<config>
 ```
 
 ### Testing Locally
 
 The server and client can be run directly from a git clone:
 ```
-./cloudwatcherd lapalma.json
-CLOUDWATCHERD_CONFIG_PATH=./lapalma.json ./cloudwatcher status
+./cloudwatcherd config/halfmetre.json
+CLOUDWATCHERD_CONFIG_PATH=./config/halfmetre.json ./cloudwatcher status
 ```
