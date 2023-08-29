@@ -12,7 +12,7 @@ A configuration file is specified when launching the dome server, and the `cloud
 
 ```python
 {
-  "daemon": "observatory_cloudwatcher", # Run the server as this daemon. Daemon types are registered in `warwick.observatory.common.daemons`.
+  "daemon": "observatory_cloudwatcher", # Run the server as this daemon. Daemon types are registered in `rockit.common.daemons`.
   "log_name": "cloudwatcherd", # The name to use when writing messages to the observatory log.
   "serial_port": "/dev/cloudwatcher", # Serial FIFO for communicating with the device
   "serial_baud": 9600, # Serial baud rate
@@ -50,7 +50,7 @@ Now open a port in the firewall:
 sudo firewall-cmd --zone=public --add-port=<port>/tcp --permanent
 sudo firewall-cmd --reload
 ```
-where `port` is the port defined in `warwick.observatory.common.daemons` for the daemon specified in the config.
+where `port` is the port defined in `rockit.common.daemons` for the daemon specified in the config.
 
 ### Upgrading Installation
 
