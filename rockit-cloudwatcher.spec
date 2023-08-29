@@ -23,6 +23,7 @@ mkdir -p %{buildroot}%{_sysconfdir}/cloudwatcherd/
 
 %{__install} %{_sourcedir}/config/10-halfmetre-cloudwatcher.rules %{buildroot}%{_udevrulesdir}
 %{__install} %{_sourcedir}/config/halfmetre.json %{buildroot}%{_sysconfdir}/cloudwatcherd/
+%{__install} %{_sourcedir}/config/warwick.json %{buildroot}%{_sysconfdir}/cloudwatcherd/
 
 %package server
 Summary:  Weather station server
@@ -56,5 +57,14 @@ Group:   Unspecified
 %defattr(0644,root,root,-)
 %{_udevrulesdir}/10-halfmetre-cloudwatcher.rules
 %{_sysconfdir}/cloudwatcherd/halfmetre.json
+
+%package data-warwick
+Summary: Weather station data for Windmill Hill observatory
+Group:   Unspecified
+%description data-warwick
+
+%files data-warwick
+%defattr(0644,root,root,-)
+%{_sysconfdir}/cloudwatcherd/warwick.json
 
 %changelog

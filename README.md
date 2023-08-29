@@ -25,14 +25,15 @@ If the physical serial port or USB adaptors change these should be updated to ma
 
 ### Initial Installation
 
-The automated packaging scripts will push 4 RPM packages to the observatory package repository:
+The automated packaging scripts will push 5 RPM packages to the observatory package repository:
 
-| Package                          | Description                                                           |
-|----------------------------------|-----------------------------------------------------------------------|
-| rockit-cloudwatcher-server       | Contains the `cloudwatcherd` server and systemd service file.         |
-| rockit-cloudwatcher-client       | Contains the `cloudwatcher` commandline utility.                      |
-| python3-rockit-cloudwatcher      | Contains the python module with shared code.                          |
-| rockit-cloudwatcher-data-lapalma | Contains the json configuration and udev rules for the La Palma unit. |
+| Package                          | Description                                                                |
+|----------------------------------|----------------------------------------------------------------------------|
+| rockit-cloudwatcher-server       | Contains the `cloudwatcherd` server and systemd service file.              |
+| rockit-cloudwatcher-client       | Contains the `cloudwatcher` commandline utility.                           |
+| python3-rockit-cloudwatcher      | Contains the python module with shared code.                               |
+| rockit-cloudwatcher-data-lapalma | Contains the json configuration and udev rules for the La Palma unit.      |
+| rockit-cloudwatcher-data-warwick | Contains the json configuration and udev rules for the Windmill Hill unit. |
 
 Alternatively, perform a local installation using `sudo make install`.
 
