@@ -73,7 +73,9 @@ class CloudWatcherDaemon:
             port.write(f'{send_type}!'.encode('ascii'))
             ret = None
             while True:
-                data = port.read(15).decode('ascii')
+                data = ''
+                while len(data) < 15:
+                    data += port.read(15 - len(data)).decode('ascii')
                 if data[:2] == f'!{response_type}':
                     ret = int(data[2:15])
                 elif data[:2] == '!\x11':
