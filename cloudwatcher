@@ -23,7 +23,7 @@ import json
 import os
 import sys
 import Pyro4
-from rockit.common import TFmt
+from rockit.common import print
 from rockit.cloudwatcher import Config
 
 SCRIPT_NAME = os.path.basename(sys.argv[0])
@@ -49,9 +49,9 @@ def print_status(config):
 
     if latest is not None:
         date = datetime.datetime.strptime(latest['date'], '%Y-%m-%dT%H:%M:%SZ')
-        print(f'Data received {TFmt.Bold}{date}{TFmt.Clear}:')
-        print(f'Sky Temperature: {TFmt.Bold}{latest["sky_temp"]:.2f} \u00B0C{TFmt.Clear} ({TFmt.Bold}{latest["sky_label"]}{TFmt.Clear})')
-        print(f'Sky Brightness: {TFmt.Bold}{latest["brightness_raw"]:.2f} k\u2126{TFmt.Clear} ({TFmt.Bold}{latest["brightness_label"]}{TFmt.Clear})')
+        print(f'Data received [b]{date}[/b]:')
+        print(f'Sky Temperature: [b]{latest["sky_temp"]:.2f} \u00B0C[/b] ([b]{latest["sky_label"]}[/b])')
+        print(f'Sky Brightness: [b]{latest["brightness_raw"]:.2f} k\u2126[/b] ([b]{latest["brightness_label"]}[/b])')
         print()
     else:
         print('error: failed to query data')
@@ -70,7 +70,7 @@ def print_json(config):
 
 def print_usage(config_paths):
     """Prints the utility help"""
-    print(f'Usage: {SCRIPT_NAME} [{"|".join(sorted(config_paths.keys()))}] <command>')
+    print(f'Usage: {SCRIPT_NAME} <{"|".join(sorted(config_paths.keys()))}> <command>')
     print()
     print('   status      print a human-readable summary of the CloudWatcher status')
     print('   json        print a machine-readable summary of the CloudWatcher status')
