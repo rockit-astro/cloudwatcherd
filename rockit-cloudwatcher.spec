@@ -1,6 +1,6 @@
 Name:      rockit-cloudwatcher
 Version:   %{_version}
-Release:   1
+Release:   1%{dist}
 Summary:   Weather station
 Url:       https://github.com/rockit-astro/cloudwatcherd
 License:   GPL-3.0

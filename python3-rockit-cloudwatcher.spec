@@ -1,6 +1,6 @@
 Name:           python3-rockit-cloudwatcher
 Version:        %{_version}
-Release:        1
+Release:        1%{dist}
 License:        GPL3
 Summary:        Common backend code for the Cloudwatcher daemons.
 Url:            https://github.com/rockit-astro/cloudwatcherd
